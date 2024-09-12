@@ -1,32 +1,29 @@
 package com.example.secgamecallenge_wordsearch
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.pointer.pointerInput
 
 val wordsToFind = listOf("KOTLIN", "ANDROID", "COMPOSE", "VIEW", "LAYOUT")
-var lastSelectedCell: GridCell? = null  // Keep track of the last selected cell
+val gridOrigin = Offset(0f, 0f)
+val cellDimensions = 30f
 
 @Composable
 fun WordSearchGame(modifier: Modifier = Modifier) {
-    var input by remember { mutableStateOf(TextFieldValue("")) }
-    val grid = remember { generateGrid(10, 10) }
+    val grid = remember { generateGrid(10, 10, gridOrigin, cellDimensions) }
     var foundWords by remember { mutableStateOf(emptyList<String>()) }
-
-    // Win condition: Check if all words are found
-    val allWordsFound = remember(foundWords) {
-        foundWords.containsAll(wordsToFind)
-    }
+    var selectedCells by remember { mutableStateOf(listOf<GridCell>()) }
+    var currentWord by remember { mutableStateOf("") } // Track the current word
 
     Column(
         modifier = modifier
@@ -38,68 +35,20 @@ fun WordSearchGame(modifier: Modifier = Modifier) {
         Text(text = "Word Search Game", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // If all words are found, show the congratulatory message
-        if (allWordsFound) {
-            Text(
-                text = "Congratulations! You found all the words!",
-                style = MaterialTheme.typography.headlineSmall,
-                color = Color.Green
-            )
-        } else {
-            BasicTextField(
-                value = input,
-                onValueChange = { input = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display the word search grid
-            Column {
-                for (row in grid) {
-                    Row {
-                        for (cell in row) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .background(
-                                        if (cell.isSelected) Color.Gray else Color.White,
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
-                                    .clickable {
-                                        // Check if the cell is adjacent to the last selected cell
-                                        if (lastSelectedCell == null || isAdjacent(
-                                                lastSelectedCell!!, cell
-                                            )
-                                        ) {
-                                            cell.isSelected = !cell.isSelected
-                                            lastSelectedCell =
-                                                if (cell.isSelected) cell else null
-
-                                            val selectedWord = grid.flatten()
-                                                .filter { it.isSelected }
-                                                .map { it.letter }
-                                                .joinToString("")
-
-                                            if (wordsToFind.contains(selectedWord) && !foundWords.contains(
-                                                    selectedWord
-                                                )
-                                            ) {
-                                                foundWords = foundWords + selectedWord
-                                            }
-                                        }
-                                    }
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = cell.letter.toString())
-                            }
-                        }
-                    }
+        // Pass grid, selectedCells, and foundWords to the grid
+        WordSearchGrid(
+            grid = grid,
+            selectedCells = selectedCells,
+            updateSelectedCells = { selectedCells = it }, // Update selectedCells when cells are selected
+            updateCurrentWord = { word -> currentWord = word }, // Update current word during drag
+            onDragEnd = {
+                // Check if the selected word is valid
+                if (wordsToFind.contains(currentWord) && !foundWords.contains(currentWord)) {
+                    foundWords = foundWords + currentWord // Add the word to found words
                 }
+                selectedCells = emptyList() // Clear the selected cells after checking
             }
-        }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -108,47 +57,77 @@ fun WordSearchGame(modifier: Modifier = Modifier) {
     }
 }
 
-
-fun isWordInGrid(grid: List<List<GridCell>>, word: String): Boolean {
-    val rows = grid.size
-    val cols = grid[0].size
-
-    // Check horizontally
-    for (i in 0 until rows) {
-        for (j in 0..(cols - word.length)) {
-            if ((0 until word.length).all { k -> grid[i][j + k].letter == word[k] }) {
-                return true
+@Composable
+fun WordSearchGrid(
+    grid: List<List<GridCell>>,
+    selectedCells: List<GridCell>,
+    updateSelectedCells: (List<GridCell>) -> Unit,
+    updateCurrentWord: (String) -> Unit,
+    onDragEnd: () -> Unit
+) {
+    Column {
+        for (row in grid) {
+            Row {
+                for (cell in row) {
+                    WordSearchGridCell(
+                        cell = cell,
+                        selectedCells = selectedCells,
+                        updateSelectedCells = updateSelectedCells,
+                        updateCurrentWord = updateCurrentWord,
+                        onDragEnd = onDragEnd
+                    )
+                }
             }
         }
     }
+}
 
-    // Check vertically
-    for (i in 0..(rows - word.length)) {
-        for (j in 0 until cols) {
-            if ((0 until word.length).all { k -> grid[i + k][j].letter == word[k] }) {
-                return true
+@Composable
+fun WordSearchGridCell(
+    cell: GridCell,
+    selectedCells: List<GridCell>,
+    updateSelectedCells: (List<GridCell>) -> Unit,
+    updateCurrentWord: (String) -> Unit,
+    onDragEnd: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .background(
+                if (selectedCells.any { it.row == cell.row && it.col == cell.col }) Color.Gray else Color.White,
+                shape = RoundedCornerShape(4.dp)
+            )
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = {
+                        if (!selectedCells.contains(cell)) {
+                            updateSelectedCells(selectedCells + cell)
+                            updateCurrentWord((selectedCells + cell).map { it.letter }.joinToString(""))
+                        }
+                    },
+                    onDragEnd = {
+                        onDragEnd() // Trigger validation of the selected word when dragging ends
+                    },
+                    onDrag = { change, _ ->
+                        val dragPosition = change.position  // Get the current drag position
+
+                        // Check if the drag position is within the current cell's boundaries
+                        if (dragPosition.x >= cell.topLeft.x && dragPosition.x <= cell.bottomRight.x &&
+                            dragPosition.y >= cell.topLeft.y && dragPosition.y <= cell.bottomRight.y) {
+
+                            // Add the cell to the selected list if not already selected
+                            if (!selectedCells.any { it.row == cell.row && it.col == cell.col }) {
+                                updateSelectedCells(selectedCells + cell)
+                                updateCurrentWord((selectedCells + cell).map { it.letter }.joinToString(""))
+                            }
+                        }
+                    }
+                )
             }
-        }
+            .padding(4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = cell.letter.toString())
     }
-
-    // Check diagonally (top-left to bottom-right)
-    for (i in 0..(rows - word.length)) {
-        for (j in 0..(cols - word.length)) {
-            if ((0 until word.length).all { k -> grid[i + k][j + k].letter == word[k] }) {
-                return true
-            }
-        }
-    }
-
-    // Check diagonally (bottom-left to top-right)
-    for (i in (word.length - 1) until rows) {
-        for (j in 0..(cols - word.length)) {
-            if ((0 until word.length).all { k -> grid[i - k][j + k].letter == word[k] }) {
-                return true
-            }
-        }
-    }
-
-    return false
 }
 

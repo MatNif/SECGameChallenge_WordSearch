@@ -1,14 +1,17 @@
 package com.example.secgamecallenge_wordsearch
 
 import kotlin.random.Random
+import androidx.compose.ui.geometry.Offset
 
 // Function to generate a 10x10 grid of GridCell objects with random letters
-fun generateGrid(rows: Int, cols: Int): MutableList<MutableList<GridCell>> {
-    var grid = MutableList(rows) {
-        MutableList(cols) {
-            // Random letter generation
-            val randomLetter = ('A'..'Z').random()
-            GridCell(letter = randomLetter)
+fun generateGrid(rows: Int, cols: Int, gridOrigin: Offset, cellDimension: Float): MutableList<MutableList<GridCell>> {
+    // Generate the grid and assign row and column positions
+    val grid = MutableList(rows) { row ->
+        MutableList(cols) { col ->
+            val randomLetter = ('A'..'Z').random()  // Random letter generation
+            val topLeft = Offset(gridOrigin.x + col * cellDimension, gridOrigin.y + row * cellDimension)
+            val bottomRight = Offset(gridOrigin.x + (col + 1) * cellDimension, gridOrigin.y + (row + 1) * cellDimension)
+            GridCell(letter = randomLetter, row = row, col = col, topLeft = topLeft, bottomRight = bottomRight)  // Include row and col in the GridCell
         }
     }
 
@@ -63,11 +66,4 @@ fun placeWordDiagonally(grid: MutableList<MutableList<GridCell>>, word: String, 
         grid[row + i][col + i].letter = word[i]
     }
     return true
-}
-
-// Function to check if two cells are adjacent
-fun isAdjacent(cell1: GridCell, cell2: GridCell): Boolean {
-    // Implement logic to determine if cell2 is adjacent to cell1
-    // This would require knowing the row and column positions of both cells
-    return true  // Simplified for now
 }
