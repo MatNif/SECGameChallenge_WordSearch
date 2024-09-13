@@ -54,13 +54,19 @@ fun WordSearchGame(modifier: Modifier = Modifier) {
                             val dragPosition = change.position
                             grid.flatten().forEach { cell ->
                                 // Check if drag position is within cell boundaries
-                                if (dragPosition.x >= cell.topLeft.x && dragPosition.x <= cell.bottomRight.x &&
-                                    dragPosition.y >= cell.topLeft.y && dragPosition.y <= cell.bottomRight.y) {
+                                if (isInCellBounds(cell, dragPosition)) {
 
                                     if (!selectedCells.contains(cell)) {
                                         selectedCells = selectedCells + cell
                                         currentWord = selectedCells.map { it.letter }.joinToString("")
                                     }
+                                    // Check if the selection is in a straight line
+                                    if (selectedCells.size > 2) {
+                                        if (!isSelectionStraight(selectedCells)) {
+                                            selectedCells = straightenSelection(selectedCells, grid) // Remove the last cell
+                                        }
+                                    }
+
                                 }
                             }
                         }
