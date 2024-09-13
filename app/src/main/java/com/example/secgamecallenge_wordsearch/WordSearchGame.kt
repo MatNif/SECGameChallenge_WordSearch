@@ -35,20 +35,43 @@ fun WordSearchGame(modifier: Modifier = Modifier) {
         Text(text = "Word Search Game", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Pass grid, selectedCells, and foundWords to the grid
-        WordSearchGrid(
-            grid = grid,
-            selectedCells = selectedCells,
-            updateSelectedCells = { selectedCells = it }, // Update selectedCells when cells are selected
-            updateCurrentWord = { word -> currentWord = word }, // Update current word during drag
-            onDragEnd = {
-                // Check if the selected word is valid
-                if (wordsToFind.contains(currentWord) && !foundWords.contains(currentWord)) {
-                    foundWords = foundWords + currentWord // Add the word to found words
+        // Drag gesture handling now at the grid level
+        Box(
+            modifier = Modifier
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = {
+                            selectedCells = emptyList() // Clear previous selection on new drag
+                        },
+                        onDragEnd = {
+                            // Check if the selected word is valid
+                            if (wordsToFind.contains(currentWord) && !foundWords.contains(currentWord)) {
+                                foundWords = foundWords + currentWord // Add the word to found words
+                            }
+                            selectedCells = emptyList() // Clear the selected cells after checking
+                        },
+                        onDrag = { change, _ ->
+                            val dragPosition = change.position
+                            grid.flatten().forEach { cell ->
+                                // Check if drag position is within cell boundaries
+                                if (dragPosition.x >= cell.topLeft.x && dragPosition.x <= cell.bottomRight.x &&
+                                    dragPosition.y >= cell.topLeft.y && dragPosition.y <= cell.bottomRight.y) {
+
+                                    if (!selectedCells.contains(cell)) {
+                                        selectedCells = selectedCells + cell
+                                        currentWord = selectedCells.map { it.letter }.joinToString("")
+                                    }
+                                }
+                            }
+                        }
+                    )
                 }
-                selectedCells = emptyList() // Clear the selected cells after checking
-            }
-        )
+        ) {
+            WordSearchGrid(
+                grid = grid,
+                selectedCells = selectedCells
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -60,10 +83,7 @@ fun WordSearchGame(modifier: Modifier = Modifier) {
 @Composable
 fun WordSearchGrid(
     grid: List<List<GridCell>>,
-    selectedCells: List<GridCell>,
-    updateSelectedCells: (List<GridCell>) -> Unit,
-    updateCurrentWord: (String) -> Unit,
-    onDragEnd: () -> Unit
+    selectedCells: List<GridCell>
 ) {
     Column {
         for (row in grid) {
@@ -71,10 +91,7 @@ fun WordSearchGrid(
                 for (cell in row) {
                     WordSearchGridCell(
                         cell = cell,
-                        selectedCells = selectedCells,
-                        updateSelectedCells = updateSelectedCells,
-                        updateCurrentWord = updateCurrentWord,
-                        onDragEnd = onDragEnd
+                        selectedCells = selectedCells
                     )
                 }
             }
@@ -85,10 +102,7 @@ fun WordSearchGrid(
 @Composable
 fun WordSearchGridCell(
     cell: GridCell,
-    selectedCells: List<GridCell>,
-    updateSelectedCells: (List<GridCell>) -> Unit,
-    updateCurrentWord: (String) -> Unit,
-    onDragEnd: () -> Unit
+    selectedCells: List<GridCell>
 ) {
     Box(
         modifier = Modifier
@@ -97,37 +111,9 @@ fun WordSearchGridCell(
                 if (selectedCells.any { it.row == cell.row && it.col == cell.col }) Color.Gray else Color.White,
                 shape = RoundedCornerShape(4.dp)
             )
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = {
-                        if (!selectedCells.contains(cell)) {
-                            updateSelectedCells(selectedCells + cell)
-                            updateCurrentWord((selectedCells + cell).map { it.letter }.joinToString(""))
-                        }
-                    },
-                    onDragEnd = {
-                        onDragEnd() // Trigger validation of the selected word when dragging ends
-                    },
-                    onDrag = { change, _ ->
-                        val dragPosition = change.position  // Get the current drag position
-
-                        // Check if the drag position is within the current cell's boundaries
-                        if (dragPosition.x >= cell.topLeft.x && dragPosition.x <= cell.bottomRight.x &&
-                            dragPosition.y >= cell.topLeft.y && dragPosition.y <= cell.bottomRight.y) {
-
-                            // Add the cell to the selected list if not already selected
-                            if (!selectedCells.any { it.row == cell.row && it.col == cell.col }) {
-                                updateSelectedCells(selectedCells + cell)
-                                updateCurrentWord((selectedCells + cell).map { it.letter }.joinToString(""))
-                            }
-                        }
-                    }
-                )
-            }
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(text = cell.letter.toString())
     }
 }
-
