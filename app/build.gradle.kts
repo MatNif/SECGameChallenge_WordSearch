@@ -80,4 +80,7 @@ dependencies {
     // Debugging tools
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // File storage
+    implementation("com.google.code.gson:gson:2.8.8")
 }

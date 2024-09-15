@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.secgamecallenge_wordsearch.ui.theme.SECGameCallenge_WordSearchTheme
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -18,7 +19,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SECGameCallenge_WordSearchTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WordSearchGame(modifier = Modifier.padding(innerPadding))
+                    MainGameScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -29,6 +30,28 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WordSearchGamePreview() {
     SECGameCallenge_WordSearchTheme {
-        WordSearchGame()
+        MainGameScreen()
+    }
+}
+
+@Composable
+fun MainGameScreen(modifier: Modifier = Modifier) {
+    var gameOver by remember { mutableStateOf(false) }
+    var isWinner by remember { mutableStateOf(false) }
+    var wordsFound by remember { mutableStateOf(0) }
+    var playerTime by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+    val topPlayers = getTopPlayers(context)
+
+    if (gameOver) {
+        GameOverScreen(isWinner, playerTime, topPlayers)
+    } else {
+        WordSearchGame(modifier) { won, time, words ->
+            isWinner = won
+            playerTime = time
+            wordsFound = words
+            gameOver = true
+            storePlayerTime(context, Player("PlayerName", words, time)) // Example: use actual player name
+        }
     }
 }

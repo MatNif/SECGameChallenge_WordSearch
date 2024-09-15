@@ -24,25 +24,34 @@ val cellDimensions = 70.dp
 
 
 @Composable
-fun WordSearchGame(modifier: Modifier = Modifier) {
-    // Convert cellDimension from Dp to pixels
+fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int) -> Unit) {
+    // Layout values for the game screen
     val cellDimensionPx = with(LocalDensity.current) { cellDimensions.toPx() }
     val grid = remember { generateGrid(10, 10, gridOrigin, cellDimensionPx) }
+
+    // Game state variables
     var foundWords by remember { mutableStateOf(emptyList<String>()) }
     var selectedCells by remember { mutableStateOf(listOf<GridCell>()) }
     var currentWord by remember { mutableStateOf("") } // Track the current word
-
-    // Timer state
     var timeLeft by remember { mutableStateOf(120) } // 2 minutes (120 seconds)
 
-    // Start countdown
+    // Start countdown timer
     LaunchedEffect(key1 = timeLeft) {
         if (timeLeft > 0) {
             kotlinx.coroutines.delay(1000L)  // Delay for 1 second
             timeLeft--
+        } else {
+            // When the timer hits 0, trigger game over
+            onGameOver(false, 120 - timeLeft, foundWords.size)
         }
     }
 
+    // Check if player has found all words
+    if (foundWords.size == 5) {
+        onGameOver(true, 120 - timeLeft, foundWords.size)
+    }
+
+    // Layout for the game screen
     Row(
         modifier = modifier
             .fillMaxSize()
@@ -56,7 +65,7 @@ fun WordSearchGame(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "SEC Word Search Game",
+                text = "SEC Game Changer - Word Search",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 30.sp
             )
