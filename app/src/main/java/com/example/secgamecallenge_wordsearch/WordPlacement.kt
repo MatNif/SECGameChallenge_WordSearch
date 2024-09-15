@@ -1,8 +1,6 @@
 package com.example.secgamecallenge_wordsearch
 
-
-
-data class WordPlacing(
+data class WordPlacement(
     val word: String = "",
     var location: List<GridCell> = mutableListOf(), // Default value for location
     var direction: Int = -1, // Integer value representing the direction of the word
