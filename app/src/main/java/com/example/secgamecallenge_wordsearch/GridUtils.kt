@@ -1,6 +1,5 @@
 package com.example.secgamecallenge_wordsearch
 
-import kotlin.random.Random
 import androidx.compose.ui.geometry.Offset
 
 // Function to generate a 10x10 grid of GridCell objects with random letters

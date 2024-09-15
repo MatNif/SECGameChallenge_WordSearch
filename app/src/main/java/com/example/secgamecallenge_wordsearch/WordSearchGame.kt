@@ -12,77 +12,131 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.platform.LocalDensity
+
 
 val wordsToFind = listOf("KOTLIN", "ANDROID", "COMPOSE", "VIEW", "LAYOUT")
 val gridOrigin = Offset(0f, 0f)
-val cellDimensions = 30f
+val cellDimensions = 70.dp
+
 
 @Composable
 fun WordSearchGame(modifier: Modifier = Modifier) {
-    val grid = remember { generateGrid(10, 10, gridOrigin, cellDimensions) }
+    // Convert cellDimension from Dp to pixels
+    val cellDimensionPx = with(LocalDensity.current) { cellDimensions.toPx() }
+    val grid = remember { generateGrid(10, 10, gridOrigin, cellDimensionPx) }
     var foundWords by remember { mutableStateOf(emptyList<String>()) }
     var selectedCells by remember { mutableStateOf(listOf<GridCell>()) }
     var currentWord by remember { mutableStateOf("") } // Track the current word
 
-    Column(
+    // Timer state
+    var timeLeft by remember { mutableStateOf(120) } // 2 minutes (120 seconds)
+
+    // Start countdown
+    LaunchedEffect(key1 = timeLeft) {
+        if (timeLeft > 0) {
+            kotlinx.coroutines.delay(1000L)  // Delay for 1 second
+            timeLeft--
+        }
+    }
+
+    Row(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(3.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "Word Search Game", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
+        // Display the word search grid on the left
+        Column(
+            modifier = Modifier.weight(3f),  // Adjust the width of the grid column
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "SEC Word Search Game",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 30.sp
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Drag gesture handling now at the grid level
-        Box(
-            modifier = Modifier
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = {
-                            selectedCells = emptyList() // Clear previous selection on new drag
-                        },
-                        onDragEnd = {
-                            // Check if the selected word is valid
-                            if (wordsToFind.contains(currentWord) && !foundWords.contains(currentWord)) {
-                                foundWords = foundWords + currentWord // Add the word to found words
-                            }
-                            selectedCells = emptyList() // Clear the selected cells after checking
-                        },
-                        onDrag = { change, _ ->
-                            val dragPosition = change.position
-                            grid.flatten().forEach { cell ->
-                                // Check if drag position is within cell boundaries
-                                if (isInCellBounds(cell, dragPosition)) {
-
-                                    if (!selectedCells.contains(cell)) {
-                                        selectedCells = selectedCells + cell
-                                        currentWord = selectedCells.map { it.letter }.joinToString("")
-                                    }
-                                    // Check if the selection is in a straight line
-                                    if (selectedCells.size > 2) {
-                                        if (!isSelectionStraight(selectedCells)) {
-                                            selectedCells = straightenSelection(selectedCells, grid) // Remove the last cell
+            // Drag gesture handling at the grid level
+            Box(
+                modifier = Modifier
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = {
+                                selectedCells = emptyList() // Clear previous selection on new drag
+                            },
+                            onDragEnd = {
+                                // Check if the selected word is valid
+                                if (wordsToFind.contains(currentWord) && !foundWords.contains(currentWord)) {
+                                    foundWords = foundWords + currentWord // Add the word to found words
+                                }
+                                selectedCells = emptyList() // Clear the selected cells after checking
+                            },
+                            onDrag = { change, _ ->
+                                val dragPosition = change.position
+                                grid.flatten().forEach { cell ->
+                                    // Check if drag position is within cell boundaries
+                                    if (isInCellBounds(cell, dragPosition)) {
+                                        if (!selectedCells.contains(cell)) {
+                                            selectedCells = selectedCells + cell
+                                            currentWord = selectedCells.map { it.letter }.joinToString("")
+                                        }
+                                        // Check if the selection is in a straight line
+                                        if (selectedCells.size > 2) {
+                                            if (!isSelectionStraight(selectedCells)) {
+                                                selectedCells = straightenSelection(selectedCells, grid) // Remove the last cell
+                                            }
                                         }
                                     }
-
                                 }
                             }
-                        }
-                    )
-                }
-        ) {
-            WordSearchGrid(
-                grid = grid,
-                selectedCells = selectedCells
-            )
+                        )
+                    }
+            ) {
+                WordSearchGrid(
+                    grid = grid,
+                    selectedCells = selectedCells
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Timer and words list panel on the right
+        Column(
+            modifier = Modifier.weight(1f),  // Adjust the width of the timer and word list column
+            horizontalAlignment = Alignment.Start
+        ) {
+            // Timer display
+            Text(
+                text = "Time Left: ${timeLeft / 60}:${(timeLeft % 60).toString().padStart(2, '0')}",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 40.sp
+            )
+            Spacer(modifier = Modifier.height(30.dp))
 
-        // Display found words
-        Text(text = "Found Words: ${foundWords.joinToString(", ")}")
+            // Display words to find
+            Text(
+                text = "Words to Find:",
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 30.sp
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Column {
+                wordsToFind.forEach { word ->
+                    Text(
+                        text = word,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (foundWords.contains(word)) Color.LightGray else Color.Black,
+                        fontSize = 28.sp,
+                        textDecoration = if (foundWords.contains(word)) TextDecoration.LineThrough else TextDecoration.None
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -112,7 +166,7 @@ fun WordSearchGridCell(
 ) {
     Box(
         modifier = Modifier
-            .size(30.dp)
+            .size(cellDimensions)
             .background(
                 if (selectedCells.any { it.row == cell.row && it.col == cell.col }) Color.Gray else Color.White,
                 shape = RoundedCornerShape(4.dp)
@@ -120,6 +174,6 @@ fun WordSearchGridCell(
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = cell.letter.toString())
+        Text(text = cell.letter.toString(), fontSize = 28.sp)
     }
 }
