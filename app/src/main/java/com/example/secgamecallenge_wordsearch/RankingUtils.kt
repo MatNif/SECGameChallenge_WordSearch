@@ -6,47 +6,62 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.mail.*
 
+// Function to store player information in the app's local storage
 fun storePlayerInfo(context: Context, player: Player) {
-    // Check if the top players list needs to be reset
-    resetTopPlayersIfNeeded(context)  // Reset every day
+    // Check if the top players list needs to be reset (done daily)
+    resetTopPlayersIfNeeded(context)
 
+    // Access the shared preferences for storing data
     val prefs = context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
     val editor = prefs.edit()
 
-    // Retrieve and update the list of players
+    // Retrieve the current list of top players and add the new player
     val players = getTopPlayers(context).toMutableList()
     players.add(player)
-    players.sortBy { it.time }  // Sort by time (fastest first)
+    // Sort players by time (fastest first) and then by the number of words found (highest first)
+    players.sortBy { it.time }
+    players.sortByDescending { it.wordsFound }
 
-    // Store top 10 players
+
+    // Keep only the top 10 players
     val topPlayers = players.take(10)
+    // Save the updated list of top players back to shared preferences
     editor.putString("top_players", Gson().toJson(topPlayers))
     editor.apply()
 }
 
-// Reset the top players list if a new day has begun since the last reset
+// Function to reset the top players list if a new day has started
 fun resetTopPlayersIfNeeded(context: Context) {
+    // Access the shared preferences for storing data
     val prefs = context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
-    val lastResetDate = prefs.getString("last_reset_date", "")  // Get the last reset date as a string
-    val currentDate = getCurrentDateString()  // Get the current date as yyyyMMdd
+    // Get the date of the last reset
+    val lastResetDate = prefs.getString("last_reset_date", "")
+    // Get the current date in yyyyMMdd format
+    val currentDate = getCurrentDateString()
 
+    // If the last reset date is not the same as the current date, reset the top players list
     if (lastResetDate != currentDate) {
-        // Reset top players and update the reset date
         val editor = prefs.edit()
-        editor.putString("top_players", Gson().toJson(emptyList<Player>()))  // Clear top players list
-        editor.putString("last_reset_date", currentDate)  // Update last reset date
+        // Clear the top players list
+        editor.putString("top_players", Gson().toJson(emptyList<Player>()))
+        // Update the last reset date to the current date
+        editor.putString("last_reset_date", currentDate)
         editor.apply()
     }
 }
 
-// Helper function to get the current date as yyyyMMdd
+// Helper function to get the current date as a string in yyyyMMdd format
 fun getCurrentDateString(): String {
     val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
     return dateFormat.format(Date())
 }
 
+// Function to retrieve the list of top players from the app's local storage
 fun getTopPlayers(context: Context): List<Player> {
+    // Access the shared preferences for storing data
     val prefs = context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
+    // Get the JSON string of top players
     val json = prefs.getString("top_players", "[]")
+    // Convert the JSON string back to a list of Player objects
     return Gson().fromJson(json, Array<Player>::class.java).toList()
 }

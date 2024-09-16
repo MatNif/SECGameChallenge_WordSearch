@@ -14,14 +14,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-val testPlayer = Player("MatNif", "mathias.niffeler@sec.ethz.ch", 0, 0)
-
+// Main activity of the app
 @OptIn(ExperimentalMaterial3Api::class)
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Set the content view to the Composable function
         setContent {
             SECGameCallenge_WordSearchTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -37,6 +36,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Preview the game screen
 @Preview(showBackground = true)
 @Composable
 fun WordSearchGamePreview() {
@@ -46,8 +46,10 @@ fun WordSearchGamePreview() {
     }
 }
 
+// Main game screen that contains the game logic
 @Composable
 fun MainGameScreen(modifier: Modifier = Modifier, player: Player) {
+    // State variables to manage game status
     var gameOver by remember { mutableStateOf(false) }
     var isWinner by remember { mutableStateOf(false) }
     var wordsFound by remember { mutableStateOf(0) }
@@ -55,17 +57,19 @@ fun MainGameScreen(modifier: Modifier = Modifier, player: Player) {
     val context = LocalContext.current
     val topPlayers = getTopPlayers(context)
 
+    // Display the appropriate screen based on game status
     if (gameOver) {
         GameOverScreen(isWinner, playerTime, topPlayers)
     } else {
         WordSearchGame(modifier) { won, time, words ->
+            // Update game state when the game is over
             isWinner = won
             playerTime = time
             wordsFound = words
             gameOver = true
             player.wordsFound = wordsFound
             player.time = playerTime
-            storePlayerInfo(context, player) // Example: use actual player name
+            storePlayerInfo(context, player) // Store player information
         }
     }
 }

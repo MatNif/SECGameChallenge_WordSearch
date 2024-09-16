@@ -10,50 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalDensity
-
-
-val wordsForTheMonth = mapOf(
-    1 to listOf("CITIES", "ENERGY", "HEALTH", "RESILIENT", "SYSTEMS"),
-    2 to listOf("MANGROVE", "CARBON", "STOCKS", "GLOBAL", "IMPACT"),
-    3 to listOf("URBAN", "HEAT", "ISLAND", "COOLING", "SINGAPORE"),
-    4 to listOf("DIGITAL", "TWIN", "UNDERGROUND", "MAPPING", "UTILITIES"),
-    5 to listOf("RESILIENCE", "FUTURE", "SYSTEMS", "MARKET", "BLACKOUT"),
-    6 to listOf("MICROGRID", "COMMUNITY", "ELECTRIC", "SUPPLY", "SURVEY"),
-    7 to listOf("SUSTAIN", "NATURE", "CITIES", "GREENERY", "CLIMATE"),
-    8 to listOf("DATA", "MODELS", "CLIMATE", "DUCT", "SIMULATE"),
-    9 to listOf("BLACK", "FLY", "RESEARCH", "INSECTS", "SOLDIER"),
-    10 to listOf("CLEAN", "ENERGY", "VEHICLE", "ALTERNATIVE", "FUEL"),
-    11 to listOf("SMART", "NATION", "CYCLE", "URBAN", "WALKING"),
-    12 to listOf("COOL", "SINGAPORE", "PROJECT", "HEAT", "MITIGATE"),
-    13 to listOf("RESILIENT", "CONFERENCE", "INTERNATIONAL", "RESEARCH", "SYSTEMS"),
-    14 to listOf("ECO", "FRIENDLY", "FOOD", "SUSTAIN", "PLANET"),
-    15 to listOf("MOU", "CAPABILITY", "KNOWLEDGE", "CITIES", "URBAN"),
-    16 to listOf("AIR", "VEGETATION", "COOL", "CLIMATE", "GREEN"),
-    17 to listOf("LIFESTYLE", "HEALTH", "PREVENT", "COACHING", "HOLISTIC"),
-    18 to listOf("MAPPING", "DIGITAL", "UNDERGROUND", "3D", "TWIN"),
-    19 to listOf("AGENCIES", "TRAINING", "PROGRAM", "WORKSHOP", "CLC"),
-    20 to listOf("FOOD", "MICROALGAE", "STUDY", "DIET", "SUSTAIN"),
-    21 to listOf("THERMAL", "COMFORT", "HEAT", "URBAN", "IMPACT"),
-    22 to listOf("NUTRITION", "SECURITY", "PROTEIN", "ALGAE", "FOOD"),
-    23 to listOf("SUPPLY", "GRID", "BLACKOUT", "MARKET", "STUDY"),
-    24 to listOf("SOLAR", "ENERGY", "RENEWABLE", "GRID", "MANAGEMENT"),
-    25 to listOf("COOLING", "STRATEGY", "URBAN", "TWIN", "CLIMATE"),
-    26 to listOf("VEHICLE", "ELECTRIC", "GREEN", "FUTURE", "ENERGY"),
-    27 to listOf("RESILIENCE", "STUDY", "HEALTH", "POLICY", "DATA"),
-    28 to listOf("SUBSURFACE", "UTILITIES", "DIGITAL", "TWIN", "MAP"),
-    29 to listOf("RESILIENT", "SYSTEMS", "RESEARCH", "CONFERENCE", "GLOBAL"),
-    30 to listOf("GREEN", "URBAN", "HEAT", "IMPACT", "COOL"),
-    31 to listOf("SOCIAL", "MEDIA", "SENTIMENT", "ANALYSIS", "AI")
-)
-val gridOrigin = Offset(0f, 0f)
-val cellDimensions = 70.dp
 
 
 @Composable
@@ -71,7 +34,8 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
     var foundWords by remember { mutableStateOf(emptyList<String>()) }
     var selectedCells by remember { mutableStateOf(listOf<GridCell>()) }
     var currentWord by remember { mutableStateOf("") } // Track the current word
-    var timeLeft by remember { mutableStateOf(120) } // 2 minutes (120 seconds)
+    var timeLeft by remember { mutableStateOf(gameDuration) } // 2 minutes (120 seconds)
+    var timeOfLastFind by remember { mutableStateOf(0) } // Time of the last word find
 
     // Start countdown timer
     LaunchedEffect(key1 = timeLeft) {
@@ -80,13 +44,20 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
             timeLeft--
         } else {
             // When the timer hits 0, trigger game over
-            onGameOver(false, 120 - timeLeft, foundWords.size)
+            onGameOver(false, timeOfLastFind, foundWords.size)
         }
+    }
+
+    // Dynamic timer color based on time left
+    val timerColor = when {
+        timeLeft > 30 -> Color(0xFF00796B)  // Green (calm)
+        timeLeft in 11..30 -> Color(0xFFFF9800)  // Orange (warning)
+        else -> Color(0xFFD32F2F)  // Red (danger)
     }
 
     // Check if player has found all words
     if (foundWords.size == 5) {
-        onGameOver(true, 120 - timeLeft, foundWords.size)
+        onGameOver(true, timeOfLastFind, foundWords.size)
     }
 
     // Handle hidden word (last word)
@@ -97,7 +68,7 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
     Row(
         modifier = modifier
             .fillMaxSize()
-            .padding(3.dp),
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -108,8 +79,11 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
         ) {
             Text(
                 text = "SEC Game Changer - Word Search",
-                style = MaterialTheme.typography.headlineMedium,
-                fontSize = 30.sp
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF004D40)  // Dark green accent
+                ),
+                fontSize = 28.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -125,6 +99,7 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
                                 // Check if the selected word is valid
                                 if (wordsToFind.contains(currentWord) && !foundWords.contains(currentWord)) {
                                     foundWords = foundWords + currentWord // Add the word to found words
+                                    timeOfLastFind = gameDuration - timeLeft // Update time of last find
                                 }
                                 selectedCells = emptyList() // Clear the selected cells after checking
                             },
@@ -138,10 +113,8 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
                                             currentWord = selectedCells.map { it.letter }.joinToString("")
                                         }
                                         // Check if the selection is in a straight line
-                                        if (selectedCells.size > 2) {
-                                            if (!isSelectionStraight(selectedCells)) {
-                                                selectedCells = straightenSelection(selectedCells, grid) // Remove the last cell
-                                            }
+                                        if (selectedCells.size > 2 && !isSelectionStraight(selectedCells)) {
+                                            selectedCells = straightenSelection(selectedCells, grid) // Remove the last cell
                                         }
                                     }
                                 }
@@ -164,16 +137,22 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
             // Timer display
             Text(
                 text = "Time Left: ${timeLeft / 60}:${(timeLeft % 60).toString().padStart(2, '0')}",
-                style = MaterialTheme.typography.headlineMedium,
-                fontSize = 40.sp
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = timerColor,  // Dynamic timer color based on time left
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             )
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Display words to find
             Text(
                 text = "Words to Find:",
-                style = MaterialTheme.typography.bodyLarge,
-                fontSize = 30.sp
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 26.sp,
+                    color = Color(0xFF004D40)  // Dark green
+                )
             )
             Spacer(modifier = Modifier.height(12.dp))
             Column {
@@ -185,10 +164,11 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
                     }
                     Text(
                         text = displayWord,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (foundWords.contains(displayWord)) Color.LightGray else Color.Black,
-                        fontSize = 28.sp,
-                        textDecoration = if (foundWords.contains(displayWord)) TextDecoration.LineThrough else TextDecoration.None
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 24.sp,
+                            textDecoration = if (foundWords.contains(displayWord)) TextDecoration.LineThrough else null,
+                            color = if (foundWords.contains(displayWord)) Color(0xFF9E9E9E) else Color(0xFF212121)  // Gray out found words
+                        )
                     )
                 }
             }
@@ -225,11 +205,18 @@ fun WordSearchGridCell(
             .size(cellDimensions)
             .background(
                 if (selectedCells.any { it.row == cell.row && it.col == cell.col }) Color.Gray else Color.White,
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(8.dp)
             )
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = cell.letter.toString(), fontSize = 28.sp)
+        Text(
+            text = cell.letter.toString(),
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF004D40)  // Dark green text for letters
+            )
+        )
     }
 }

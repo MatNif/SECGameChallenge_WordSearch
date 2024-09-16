@@ -2,11 +2,13 @@ package com.example.secgamecallenge_wordsearch
 
 import androidx.compose.ui.geometry.Offset
 
+// Function to check if a given position is within the bounds of a grid cell
 fun isInCellBounds(cell: GridCell, position: Offset): Boolean {
     return position.x >= cell.topLeft.x && position.x <= cell.bottomRight.x &&
             position.y >= cell.topLeft.y && position.y <= cell.bottomRight.y
 }
 
+// Function to check if a list of selected cells forms a straight line (horizontal, vertical, or diagonal)
 fun isSelectionStraight(cells: List<GridCell>): Boolean {
     if (cells.size < 2) return true
 
@@ -49,17 +51,18 @@ fun isSelectionStraight(cells: List<GridCell>): Boolean {
         }
     }
 
+    // Return true if the selection is either horizontal, vertical, or diagonal
     return isHorizontal || isVertical || isDiagonal
 }
 
-
+// Function to adjust a list of selected cells to form a straight line if possible
 fun straightenSelection(cells: List<GridCell>, grid: List<List<GridCell>>): List<GridCell> {
 
     val firstCell = cells.first()
     val lastCell = cells.last()
     var lastCellInLine = GridCell()
 
-    // Find the last cell in the line
+    // Find the last cell in the line that forms a straight line
     for (i in 1 until cells.size) {
         val consecutiveCells = cells.subList(0, cells.size - i)
         if (isSelectionStraight(consecutiveCells)) {
@@ -68,27 +71,25 @@ fun straightenSelection(cells: List<GridCell>, grid: List<List<GridCell>>): List
         }
     }
 
-    // Redraw a straight line if:
-    // 1. the manhattan distance between the last cell and the last cell in the line is >2
-    // 2. and the last cell is in line horizontally, vertically or diagonally with the first cell
-    if (manhattanDistance(lastCellInLine, lastCell)<2 && isSelectionStraight(listOf(firstCell, lastCell))) {
+    // Redraw a straight line if the last cell is in line with the first cell
+    if (manhattanDistance(lastCellInLine, lastCell) < 2 && isSelectionStraight(listOf(firstCell, lastCell))) {
         return drawStraightLine(firstCell, lastCell, grid)
     } else {
-        // else remove the non-straight part of the line
+        // Remove the non-straight part of the line
         return cells.subList(0, cells.indexOf(lastCellInLine))
     }
-
-
 }
 
+// Function to calculate the Manhattan distance between two cells
 fun manhattanDistance(cell1: GridCell, cell2: GridCell): Int {
     return Math.abs(cell1.row - cell2.row) + Math.abs(cell1.col - cell2.col)
 }
 
+// Function to draw a straight line of cells between two given cells
 fun drawStraightLine(start: GridCell, end: GridCell, grid: List<List<GridCell>>): List<GridCell> {
     val cells = mutableListOf<GridCell>()
 
-    // If the start and end cell.row are the same, draw a horizontal line
+    // Draw a horizontal line if the start and end cells are in the same row
     if (start.row == end.row) {
         val row = start.row
         val startCol = Math.min(start.col, end.col)
@@ -97,7 +98,7 @@ fun drawStraightLine(start: GridCell, end: GridCell, grid: List<List<GridCell>>)
             cells.add(grid[row][col])
         }
 
-    // If the start and end cell.col are the same, draw a vertical line
+        // Draw a vertical line if the start and end cells are in the same column
     } else if (start.col == end.col) {
         val col = start.col
         val startRow = Math.min(start.row, end.row)
@@ -106,7 +107,7 @@ fun drawStraightLine(start: GridCell, end: GridCell, grid: List<List<GridCell>>)
             cells.add(grid[row][col])
         }
 
-    // If the start and end cells are diagonally offset, draw a diagonal line
+        // Draw a diagonal line if the start and end cells are diagonally aligned
     } else if (Math.abs(start.row - end.row) == Math.abs(start.col - end.col)) {
         if (start.row < end.row && start.col < end.col) {
             for (i in 0..Math.abs(start.row - end.row)) {
@@ -126,9 +127,9 @@ fun drawStraightLine(start: GridCell, end: GridCell, grid: List<List<GridCell>>)
             }
         }
 
-    // If the start and end cells are not in a straight line, return the start cell
+        // If the start and end cells are not in a straight line, return the start cell
     } else {
-       cells.add(start)
+        cells.add(start)
     }
     return cells
 }
