@@ -62,7 +62,7 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
 
     // Handle hidden word (last word)
     val hiddenWord = wordsToFind.lastOrNull() ?: ""
-    val displayedWords = wordsToFind.dropLast(1) + hiddenWord.map { '?' }.joinToString("")
+    val displayedWords = wordsToFind.dropLast(1) + hiddenWord.map { '?' }.joinToString(" ")
 
     // Layout for the game screen
     Row(

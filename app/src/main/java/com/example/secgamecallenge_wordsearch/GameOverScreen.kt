@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun GameOverScreen(isWinner: Boolean, playerTime: Int, topPlayers: List<Player>) {
+fun GameOverScreen(isWinner: Boolean, currentPlayer: Player, topPlayers: List<Player>) {
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -38,9 +38,9 @@ fun GameOverScreen(isWinner: Boolean, playerTime: Int, topPlayers: List<Player>)
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Show player's time
+        // Show player's time and number of words found
         Text(
-            text = "Your Time: ${playerTime / 60}:${(playerTime % 60).toString().padStart(2, '0')}",
+            text = "Number Of Words Found: ${currentPlayer.wordsFound}       In A Time Of: ${currentPlayer.time / 60}:${(currentPlayer.time % 60).toString().padStart(2, '0')}",
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 24.sp,
                 color = Color(0xFF004D40)  // Dark green
@@ -120,7 +120,7 @@ fun GameOverScreen(isWinner: Boolean, playerTime: Int, topPlayers: List<Player>)
                         text = "${index + 1}",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 22.sp,
-                            fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (player.name == currentPlayer.name) FontWeight.Bold else FontWeight.Normal
                         ),
                         modifier = Modifier.weight(1.2f),
                         textAlign = TextAlign.Center
@@ -129,8 +129,8 @@ fun GameOverScreen(isWinner: Boolean, playerTime: Int, topPlayers: List<Player>)
                         text = player.name,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 22.sp,
-                            color = if (index == 0) Color(0xFF00796B) else Color.Black,  // Highlight the fastest player with green
-                            fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Normal
+                            color = if (player.name == currentPlayer.name) Color(0xFF00796B) else Color.Black,  // Highlight the fastest player with green
+                            fontWeight = if (player.name == currentPlayer.name) FontWeight.Bold else FontWeight.Normal
                         ),
                         modifier = Modifier.weight(4f),
                         textAlign = TextAlign.Start
@@ -138,7 +138,8 @@ fun GameOverScreen(isWinner: Boolean, playerTime: Int, topPlayers: List<Player>)
                     Text(
                         text = "${player.time / 60}:${(player.time % 60).toString().padStart(2, '0')}",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 22.sp
+                            fontSize = 22.sp,
+                            fontWeight = if (player.name == currentPlayer.name) FontWeight.Bold else FontWeight.Normal
                         ),
                         modifier = Modifier.weight(2f),
                         textAlign = TextAlign.Center  // Center-align time values
@@ -146,7 +147,8 @@ fun GameOverScreen(isWinner: Boolean, playerTime: Int, topPlayers: List<Player>)
                     Text(
                         text = "${player.wordsFound}",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 22.sp
+                            fontSize = 22.sp,
+                            fontWeight = if (player.name == currentPlayer.name) FontWeight.Bold else FontWeight.Normal
                         ),
                         modifier = Modifier.weight(2f),
                         textAlign = TextAlign.Center  // Center-align words found

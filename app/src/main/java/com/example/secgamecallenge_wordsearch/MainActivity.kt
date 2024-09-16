@@ -52,23 +52,19 @@ fun MainGameScreen(modifier: Modifier = Modifier, player: Player) {
     // State variables to manage game status
     var gameOver by remember { mutableStateOf(false) }
     var isWinner by remember { mutableStateOf(false) }
-    var wordsFound by remember { mutableStateOf(0) }
-    var playerTime by remember { mutableStateOf(0) }
     val context = LocalContext.current
     val topPlayers = getTopPlayers(context)
 
     // Display the appropriate screen based on game status
     if (gameOver) {
-        GameOverScreen(isWinner, playerTime, topPlayers)
+        GameOverScreen(isWinner, player, topPlayers)
     } else {
         WordSearchGame(modifier) { won, time, words ->
             // Update game state when the game is over
-            isWinner = won
-            playerTime = time
-            wordsFound = words
             gameOver = true
-            player.wordsFound = wordsFound
-            player.time = playerTime
+            isWinner = won
+            player.time = time
+            player.wordsFound = words
             storePlayerInfo(context, player) // Store player information
         }
     }
