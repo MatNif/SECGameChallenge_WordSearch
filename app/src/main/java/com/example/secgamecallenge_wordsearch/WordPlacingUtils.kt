@@ -148,7 +148,7 @@ fun calculateWordPlacement(word: String, direction: Int, anchorCell: GridCell, a
             // Horizontal placement
             val row = anchorCell.row
             val startCol = anchorCell.col - anchorLetterIndex
-            val endCol = startCol + word.length
+            val endCol = startCol + word.length - 1
 
             if (startCol >= 0 && endCol < grid[0].size) {
                 val wordCells = mutableListOf<GridCell>()
@@ -162,7 +162,7 @@ fun calculateWordPlacement(word: String, direction: Int, anchorCell: GridCell, a
             // Vertical placement
             val col = anchorCell.col
             val startRow = anchorCell.row - anchorLetterIndex
-            val endRow = startRow + word.length
+            val endRow = startRow + word.length - 1
 
             if (startRow >= 0 && endRow < grid.size) {
                 val wordCells = mutableListOf<GridCell>()
@@ -176,8 +176,8 @@ fun calculateWordPlacement(word: String, direction: Int, anchorCell: GridCell, a
             // Diagonal (top-left to bottom-right) placement
             val startRow = anchorCell.row - anchorLetterIndex
             val startCol = anchorCell.col - anchorLetterIndex
-            val endRow = startRow + word.length
-            val endCol = startCol + word.length
+            val endRow = startRow + word.length - 1
+            val endCol = startCol + word.length - 1
 
             if (startRow >= 0 && startCol >= 0 && endRow < grid.size && endCol < grid[0].size) {
                 val wordCells = mutableListOf<GridCell>()
@@ -191,8 +191,8 @@ fun calculateWordPlacement(word: String, direction: Int, anchorCell: GridCell, a
             // Diagonal (top-right to bottom-left) placement
             val startRow = anchorCell.row - anchorLetterIndex
             val startCol = anchorCell.col + anchorLetterIndex
-            val endRow = startRow + word.length
-            val endCol = startCol - word.length
+            val endRow = startRow + word.length - 1
+            val endCol = startCol - word.length + 1
 
             if (startRow >= 0 && startCol < grid[0].size && endRow < grid.size && endCol >= 0) {
                 val wordCells = mutableListOf<GridCell>()

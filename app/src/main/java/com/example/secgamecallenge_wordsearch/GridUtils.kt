@@ -3,7 +3,7 @@ package com.example.secgamecallenge_wordsearch
 import androidx.compose.ui.geometry.Offset
 
 // Function to generate a 10x10 grid of GridCell objects with random letters
-fun generateGrid(rows: Int, cols: Int, gridOrigin: Offset, cellDimension: Float):
+fun generateGrid(rows: Int, cols: Int, gridOrigin: Offset, cellDimension: Float, wordsToFind: List<String>):
         MutableList<MutableList<GridCell>> {
 
     // Generate the grid and assign row and column positions

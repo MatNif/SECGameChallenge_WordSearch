@@ -1,5 +1,6 @@
 package com.example.secgamecallenge_wordsearch
 
+import android.icu.util.Calendar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
@@ -18,16 +19,53 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.platform.LocalDensity
 
 
-val wordsToFind = listOf("KOTLIN", "ANDROID", "COMPOSE", "VIEW", "LAYOUT")
+val wordsForTheMonth = mapOf(
+    1 to listOf("CITIES", "ENERGY", "HEALTH", "RESILIENT", "SYSTEMS"),
+    2 to listOf("MANGROVE", "CARBON", "STOCKS", "GLOBAL", "IMPACT"),
+    3 to listOf("URBAN", "HEAT", "ISLAND", "COOLING", "SINGAPORE"),
+    4 to listOf("DIGITAL", "TWIN", "UNDERGROUND", "MAPPING", "UTILITIES"),
+    5 to listOf("RESILIENCE", "FUTURE", "SYSTEMS", "MARKET", "BLACKOUT"),
+    6 to listOf("MICROGRID", "COMMUNITY", "ELECTRIC", "SUPPLY", "SURVEY"),
+    7 to listOf("SUSTAIN", "NATURE", "CITIES", "GREENERY", "CLIMATE"),
+    8 to listOf("DATA", "MODELS", "CLIMATE", "DUCT", "SIMULATE"),
+    9 to listOf("BLACK", "FLY", "RESEARCH", "INSECTS", "SOLDIER"),
+    10 to listOf("CLEAN", "ENERGY", "VEHICLE", "ALTERNATIVE", "FUEL"),
+    11 to listOf("SMART", "NATION", "CYCLE", "URBAN", "WALKING"),
+    12 to listOf("COOL", "SINGAPORE", "PROJECT", "HEAT", "MITIGATE"),
+    13 to listOf("RESILIENT", "CONFERENCE", "INTERNATIONAL", "RESEARCH", "SYSTEMS"),
+    14 to listOf("ECO", "FRIENDLY", "FOOD", "SUSTAIN", "PLANET"),
+    15 to listOf("MOU", "CAPABILITY", "KNOWLEDGE", "CITIES", "URBAN"),
+    16 to listOf("AIR", "VEGETATION", "COOL", "CLIMATE", "GREEN"),
+    17 to listOf("LIFESTYLE", "HEALTH", "PREVENT", "COACHING", "HOLISTIC"),
+    18 to listOf("MAPPING", "DIGITAL", "UNDERGROUND", "3D", "TWIN"),
+    19 to listOf("AGENCIES", "TRAINING", "PROGRAM", "WORKSHOP", "CLC"),
+    20 to listOf("FOOD", "MICROALGAE", "STUDY", "DIET", "SUSTAIN"),
+    21 to listOf("THERMAL", "COMFORT", "HEAT", "URBAN", "IMPACT"),
+    22 to listOf("NUTRITION", "SECURITY", "PROTEIN", "ALGAE", "FOOD"),
+    23 to listOf("SUPPLY", "GRID", "BLACKOUT", "MARKET", "STUDY"),
+    24 to listOf("SOLAR", "ENERGY", "RENEWABLE", "GRID", "MANAGEMENT"),
+    25 to listOf("COOLING", "STRATEGY", "URBAN", "TWIN", "CLIMATE"),
+    26 to listOf("VEHICLE", "ELECTRIC", "GREEN", "FUTURE", "ENERGY"),
+    27 to listOf("RESILIENCE", "STUDY", "HEALTH", "POLICY", "DATA"),
+    28 to listOf("SUBSURFACE", "UTILITIES", "DIGITAL", "TWIN", "MAP"),
+    29 to listOf("RESILIENT", "SYSTEMS", "RESEARCH", "CONFERENCE", "GLOBAL"),
+    30 to listOf("GREEN", "URBAN", "HEAT", "IMPACT", "COOL"),
+    31 to listOf("SOCIAL", "MEDIA", "SENTIMENT", "ANALYSIS", "AI")
+)
 val gridOrigin = Offset(0f, 0f)
 val cellDimensions = 70.dp
 
 
 @Composable
 fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int) -> Unit) {
+    // Get the words for the current day of the month
+    val now = Calendar.getInstance()
+    val dayOfMonth = now.get(Calendar.DAY_OF_MONTH)
+    val wordsToFind = wordsForTheMonth[dayOfMonth] ?: emptyList()
+
     // Layout values for the game screen
     val cellDimensionPx = with(LocalDensity.current) { cellDimensions.toPx() }
-    val grid = remember { generateGrid(10, 10, gridOrigin, cellDimensionPx) }
+    val grid = remember { generateGrid(10, 10, gridOrigin, cellDimensionPx, wordsToFind) }
 
     // Game state variables
     var foundWords by remember { mutableStateOf(emptyList<String>()) }
@@ -50,6 +88,10 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
     if (foundWords.size == 5) {
         onGameOver(true, 120 - timeLeft, foundWords.size)
     }
+
+    // Handle hidden word (last word)
+    val hiddenWord = wordsToFind.lastOrNull() ?: ""
+    val displayedWords = wordsToFind.dropLast(1) + hiddenWord.map { '?' }.joinToString("")
 
     // Layout for the game screen
     Row(
@@ -135,13 +177,18 @@ fun WordSearchGame(modifier: Modifier = Modifier, onGameOver: (Boolean, Int, Int
             )
             Spacer(modifier = Modifier.height(12.dp))
             Column {
-                wordsToFind.forEach { word ->
+                displayedWords.forEachIndexed { index, word ->
+                    val displayWord = if (index == wordsToFind.lastIndex && foundWords.contains(hiddenWord)) {
+                        hiddenWord
+                    } else {
+                        word
+                    }
                     Text(
-                        text = word,
+                        text = displayWord,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = if (foundWords.contains(word)) Color.LightGray else Color.Black,
+                        color = if (foundWords.contains(displayWord)) Color.LightGray else Color.Black,
                         fontSize = 28.sp,
-                        textDecoration = if (foundWords.contains(word)) TextDecoration.LineThrough else TextDecoration.None
+                        textDecoration = if (foundWords.contains(displayWord)) TextDecoration.LineThrough else TextDecoration.None
                     )
                 }
             }

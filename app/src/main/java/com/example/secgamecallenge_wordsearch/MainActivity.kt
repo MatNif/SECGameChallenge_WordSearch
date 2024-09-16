@@ -10,6 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.secgamecallenge_wordsearch.ui.theme.SECGameCallenge_WordSearchTheme
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 val testPlayer = Player("MatNif", "mathias.niffeler@sec.ethz.ch", 0, 0)
 
@@ -27,8 +30,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Schedule the email task at midnight every day
-        scheduleEmailTask(applicationContext)
+        // Schedule the email task at midnight every day on a background thread
+        CoroutineScope(Dispatchers.IO).launch {
+            scheduleEmailTask(applicationContext)
+        }
     }
 }
 
@@ -36,7 +41,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WordSearchGamePreview() {
     SECGameCallenge_WordSearchTheme {
-        val player = Player("Player 1", "employee@sec.ethz.ch", 0, 0)
+        val player = Player("PreviewPlayer", "employee@sec.ethz.ch", 0, 0)
         MainGameScreen(player=player)
     }
 }
