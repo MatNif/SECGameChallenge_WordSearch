@@ -11,18 +11,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.secgamecallenge_wordsearch.ui.theme.SECGameCallenge_WordSearchTheme
 import androidx.compose.ui.platform.LocalContext
 
+val testPlayer = Player("MatNif", "mathias.niffeler@sec.ethz.ch", 0, 0)
+
 @OptIn(ExperimentalMaterial3Api::class)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             SECGameCallenge_WordSearchTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainGameScreen(modifier = Modifier.padding(innerPadding))
+                    MainGameScreen(modifier = Modifier.padding(innerPadding), player = testPlayer)
                 }
             }
         }
+
+        // Schedule the email task at midnight every day
+        scheduleEmailTask(applicationContext)
     }
 }
 
@@ -30,12 +36,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WordSearchGamePreview() {
     SECGameCallenge_WordSearchTheme {
-        MainGameScreen()
+        val player = Player("Player 1", "employee@sec.ethz.ch", 0, 0)
+        MainGameScreen(player=player)
     }
 }
 
 @Composable
-fun MainGameScreen(modifier: Modifier = Modifier) {
+fun MainGameScreen(modifier: Modifier = Modifier, player: Player) {
     var gameOver by remember { mutableStateOf(false) }
     var isWinner by remember { mutableStateOf(false) }
     var wordsFound by remember { mutableStateOf(0) }
@@ -51,7 +58,9 @@ fun MainGameScreen(modifier: Modifier = Modifier) {
             playerTime = time
             wordsFound = words
             gameOver = true
-            storePlayerTime(context, Player("PlayerName", words, time)) // Example: use actual player name
+            player.wordsFound = wordsFound
+            player.time = playerTime
+            storePlayerInfo(context, player) // Example: use actual player name
         }
     }
 }
