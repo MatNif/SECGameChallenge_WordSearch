@@ -40,7 +40,8 @@ fun GameOverScreen(isWinner: Boolean, currentPlayer: Player, topPlayers: List<Pl
 
         // Show player's time and number of words found
         Text(
-            text = "Number Of Words Found: ${currentPlayer.wordsFound}       In A Time Of: ${currentPlayer.time / 60}:${(currentPlayer.time % 60).toString().padStart(2, '0')}",
+            text = "Number Of Words Found: ${currentPlayer.wordsFound}       " +
+                    "In A Time Of: ${currentPlayer.time / 60}:${(currentPlayer.time % 60).toString().padStart(2, '0')}",
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 24.sp,
                 color = Color(0xFF004D40)  // Dark green
