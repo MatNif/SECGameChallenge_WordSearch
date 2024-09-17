@@ -80,11 +80,6 @@ fun straightenSelection(cells: List<GridCell>, grid: List<List<GridCell>>): List
     }
 }
 
-// Function to calculate the Manhattan distance between two cells
-fun manhattanDistance(cell1: GridCell, cell2: GridCell): Int {
-    return Math.abs(cell1.row - cell2.row) + Math.abs(cell1.col - cell2.col)
-}
-
 // Function to draw a straight line of cells between two given cells
 fun drawStraightLine(start: GridCell, end: GridCell, grid: List<List<GridCell>>): List<GridCell> {
     val cells = mutableListOf<GridCell>()
